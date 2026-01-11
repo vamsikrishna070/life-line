@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Sample Donations</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #1f2937;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      display: none;
+    }
+    .success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 2px solid #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🩸 Add Sample Donations</h1>
+    <p style="color: #6b7280; margin-bottom: 30px;">
+      This will create 5 sample donations for your donor account. Make sure you're logged in as a donor.
+    </p>
+    
+    <div class="form-group">
+      <label>Your Email (to find your donor account)</label>
+      <input type="email" id="email" placeholder="donor@example.com" required>
+    </div>
+
+    <div class="form-group">
+      <label>Number of Donations to Create</label>
+      <select id="count">
+        <option value="3">3 donations</option>
+        <option value="5" selected>5 donations</option>
+        <option value="10">10 donations</option>
+      </select>
+    </div>
+
+    <button onclick="createDonations()">Create Sample Donations</button>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    async function createDonations() {
+      const email = document.getElementById('email').value;
+      const count = parseInt(document.getElementById('count').value);
+      const resultDiv = document.getElementById('result');
+
+      if (!email) {
+        showResult('Please enter your email', 'error');
+        return;
+      }
+
+      try {
+        // Get auth token from localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showResult('Please login first at http://localhost:3001', 'error');
+          return;
+        }
+
+        resultDiv.style.display = 'block';
+        resultDiv.className = 'result';
+        resultDiv.textContent = 'Creating donations...';
+
+        const hospitals = ['City General Hospital', 'Metro Health Center', 'Central Hospital', 'Community Blood Drive', 'St. Mary\'s Hospital'];
+        const types = ['Emergency', 'Scheduled', 'Campaign', 'Walk-in'];
+        
+        const donations = [];
+        const now = new Date();
+
+        for (let i = 0; i < count; i++) {
+          const monthsAgo = i + 1;
+          const date = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 15);
+          
+          donations.push({
+            quantity: 450,
+            donationType: types[i % types.length],
+            hospital: hospitals[i % hospitals.length],
+            location: {
+              city: 'New York',
+              address: `${100 + i} Main Street`
+            },
+            notes: `Donation #${i + 1}`,
+            hemoglobinLevel: 14 + Math.random(),
+            bloodPressure: {
+              systolic: 115 + Math.floor(Math.random() * 10),
+              diastolic: 75 + Math.floor(Math.random() * 10)
+            },
+            temperature: 98.4 + Math.random() * 0.6,
+            weight: 65 + Math.floor(Math.random() * 20),
+            createdAt: date.toISOString()
+          });
+        }
+
+        // Create each donation
+        let created = 0;
+        for (const donation of donations) {
+          const response = await fetch('http://localhost:5000/api/donations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(donation)
+          });
+
+          if (response.ok) {
+            created++;
+          }
+        }
+
+        showResult(`Successfully created ${created} donation records! Refresh your donor dashboard to see them.`, 'success');
+      } catch (error) {
+        showResult(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function showResult(message, type) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.className = `result ${type}`;
+      resultDiv.textContent = message;
+    }
+  </script>
+</body>
+</html>
