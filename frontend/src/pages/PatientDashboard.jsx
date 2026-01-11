@@ -18,6 +18,7 @@ const PatientDashboard = () => {
     bloodGroup: 'A+',
     unitsRequired: 1,
     urgency: 'Normal',
+    patientName: '',
     hospitalName: '',
     location: {
       city: '',
@@ -93,25 +94,27 @@ const PatientDashboard = () => {
       setLoading(true)
       const response = await api.post('/requests', {
         bloodGroup: formData.bloodGroup,
-        unitsRequired: parseInt(formData.unitsRequired),
+        unitsNeeded: parseInt(formData.unitsRequired),
         urgency: formData.urgency,
+        patientName: formData.patientName,
         hospitalName: formData.hospitalName,
         location: {
           city: formData.location.city,
           address: formData.location.address,
           hospital: formData.hospitalName
         },
-        contactNumber: formData.contactNumber,
-        notes: formData.notes
+        contactPhone: formData.contactNumber,
+        description: formData.notes
       })
       
       if (response.data.success) {
-        showNotification(`Request created! ${response.data.notifiedDonorsCount} donors notified.`, 'success')
+        showNotification(`Request created! ${response.data.notifiedDonorsCount || 0} donors notified.`, 'success')
         setShowCreateForm(false)
         setFormData({
           bloodGroup: 'A+',
           unitsRequired: 1,
           urgency: 'Normal',
+          patientName: '',
           hospitalName: '',
           location: { city: '', address: '', hospital: '' },
           contactNumber: '',
@@ -412,6 +415,18 @@ const PatientDashboard = () => {
             
             <form onSubmit={handleSubmit} className="request-form">
               <div className="form-grid">
+                <div className="form-group">
+                  <label>Patient Name *</label>
+                  <input
+                    type="text"
+                    name="patientName"
+                    value={formData.patientName}
+                    onChange={handleChange}
+                    placeholder="Enter patient name"
+                    required
+                  />
+                </div>
+
                 <div className="form-group">
                   <label>Blood Group *</label>
                   <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} required>
