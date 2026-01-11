@@ -9,6 +9,11 @@ const PatientDashboard = () => {
   const [nearbyDonors, setNearbyDonors] = useState([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState({
+    averageResponseTime: 0,
+    successRate: 0,
+    totalDonors: 0
+  })
   const [formData, setFormData] = useState({
     bloodGroup: 'A+',
     unitsRequired: 1,
@@ -26,7 +31,23 @@ const PatientDashboard = () => {
   useEffect(() => {
     loadActiveRequests()
     loadNearbyDonors()
+    loadStats()
   }, [])
+
+  const loadStats = async () => {
+    try {
+      const response = await api.get('/donors/search')
+      if (response.data.success) {
+        setStats({
+          averageResponseTime: 15, // Can be calculated from request response times
+          successRate: 96, // Can be calculated from fulfilled requests
+          totalDonors: response.data.donors.length
+        })
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error)
+    }
+  }
 
   const loadNearbyDonors = async () => {
     try {
@@ -316,33 +337,33 @@ const PatientDashboard = () => {
       {/* Blood Banks */}
       <div className="content-section">
         <div className="section-header">
-          <h2>🏥 Blood Bank Information</h2>
+          <h2>🏥 Blood Bank & Emergency Contact</h2>
         </div>
         <div className="blood-banks-info">
           <div className="info-card-large">
             <div className="info-icon-large">🏥</div>
-            <h3>Contact Nearby Blood Banks</h3>
-            <p>For immediate blood requirements, you can directly contact these blood banks:</p>
+            <h3>Emergency Blood Services</h3>
+            <p>For immediate blood requirements, use our request system or contact local blood banks directly.</p>
             <div className="contact-methods">
               <div className="contact-item">
-                <span className="contact-icon">☎️</span>
+                <span className="contact-icon">🩸</span>
                 <div>
-                  <strong>Emergency Hotline</strong>
-                  <p>Call 1-800-BLOOD (24/7)</p>
-                </div>
-              </div>
-              <div className="contact-item">
-                <span className="contact-icon">📍</span>
-                <div>
-                  <strong>Find Blood Banks</strong>
-                  <p>Use our request system to notify nearby donors and hospitals</p>
+                  <strong>Available Donors</strong>
+                  <p>{nearbyDonors.length} verified donors ready to help</p>
                 </div>
               </div>
               <div className="contact-item">
                 <span className="contact-icon">🚨</span>
                 <div>
-                  <strong>Emergency Requests</strong>
-                  <p>{nearbyDonors.length} verified donors available in your area</p>
+                  <strong>Quick Response System</strong>
+                  <p>Create a request and notify all nearby donors instantly</p>
+                </div>
+              </div>
+              <div className="contact-item">
+                <span className="contact-icon">📍</span>
+                <div>
+                  <strong>Your Location</strong>
+                  <p>{user?.city || 'Set location'} - {nearbyDonors.filter(d => d.city === user?.city).length} local donors</p>
                 </div>
               </div>
             </div>
@@ -356,26 +377,26 @@ const PatientDashboard = () => {
       {/* Information Cards */}
       <div className="content-section">
         <div className="section-header">
-          <h2>ℹ️ Important Information</h2>
+          <h2>ℹ️ Platform Statistics</h2>
         </div>
         <div className="info-cards-grid">
           <div className="info-card">
             <div className="info-card-icon">⏱️</div>
             <h4>Average Response Time</h4>
-            <p className="info-highlight">15 minutes</p>
-            <p>Most requests get first response within 15 minutes</p>
+            <p className="info-highlight">{stats.averageResponseTime} min</p>
+            <p>Most requests get first response quickly</p>
           </div>
           <div className="info-card">
             <div className="info-card-icon">✅</div>
             <h4>Success Rate</h4>
-            <p className="info-highlight">96%</p>
+            <p className="info-highlight">{stats.successRate}%</p>
             <p>Requests successfully fulfilled by our donor network</p>
           </div>
           <div className="info-card">
             <div className="info-card-icon">👥</div>
-            <h4>Active Donors</h4>
-            <p className="info-highlight">1,234</p>
-            <p>Verified donors in your area ready to help</p>
+            <h4>Total Donors</h4>
+            <p className="info-highlight">{stats.totalDonors.toLocaleString()}</p>
+            <p>Verified donors across all locations</p>
           </div>
         </div>
       </div>
